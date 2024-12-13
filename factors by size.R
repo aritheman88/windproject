@@ -7,6 +7,12 @@ if (!require(RSQLite)) install.packages("RSQLite")
 library(RSQLite)
 if (!require(tidyr)) install.packages("tidyr")
 library(tidyr)
+if (!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+if (!require(extrafont)) install.packages("extrafont")
+library(extrafont)
+
+loadfonts(device = "win")  # Load system fonts for Windows
 
 # Set the working directory
 setwd("C:/Users/ariel/MyPythonScripts/wind")
@@ -28,7 +34,7 @@ all_quotes_joined <- all_quotes %>%
 # Classify projects as small (<20 MW) or large (>=20 MW)
 all_quotes_joined <- all_quotes_joined %>%
   mutate(
-    project_size = ifelse(installed_capacity < 20, "Small", "Large")
+    project_size = ifelse(installed_capacity < 20, "Small projects", "Large projects")  # Updated labels
   )
 
 # Filter out rows where project_size is NA
@@ -48,16 +54,27 @@ factor_shares_by_size <- all_quotes_joined %>%
 
 # Convert the result to a long format for plotting
 factor_shares_long <- factor_shares_by_size %>%
-  pivot_longer(cols = -project_size, names_to = "Factor", values_to = "Share")
+  pivot_longer(cols = -project_size, names_to = "Factor", values_to = "Share") %>%
+  mutate(Factor = recode(Factor, "Community_acceptance" = "Community acceptance"))  # Updated column name
 
 # Create the grouped bar chart
-ggplot(factor_shares_long, aes(x = Factor, y = Share, fill = project_size)) +
+ggplot(factor_shares_long, aes(x = Factor, y = Share * 100, fill = project_size)) +  # Convert Share to percentage
   geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
-  labs(title = "Share of Statements by Factor and Project Size", x = "Factor", y = "Share of Statements") +
-  scale_fill_manual(values = c("Small" = "skyblue", "Large" = "orange")) +
+  labs(title = "Share of statements by factor and project size", 
+       x = "Factor", 
+       y = "Share of statements (%)") +  # Updated y-axis label
+  scale_fill_manual(values = c("Small projects" = "skyblue", "Large projects" = "orange")) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Show percentages on y-axis
   theme_minimal() +
-  theme(legend.title = element_blank())
+  theme(
+    text = element_text(family = "Times New Roman", size = 12),  # Use Times New Roman
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    plot.title = element_text(size = 14)
+  )
 
 # Disconnect from the database
 dbDisconnect(con)
-
+print("Database disconnected")
