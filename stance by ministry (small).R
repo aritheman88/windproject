@@ -7,7 +7,13 @@ if (!require(DBI)) install.packages("DBI")
 library(DBI)
 if (!require(RSQLite)) install.packages("RSQLite")
 library(RSQLite)
+if (!require(tidyr)) install.packages("tidyr")
 library(tidyr)
+if (!require(extrafont)) install.packages("extrafont")
+library(extrafont)
+
+# Load fonts for Windows
+loadfonts(device = "win")
 
 # Set the working directory
 setwd("C:/Users/ariel/MyPythonScripts/wind")
@@ -36,7 +42,7 @@ print("Data filtered")
 
 # Filter for government ministries
 government_ministries <- c(
-  "Environmental Protection", "Defense", "Energy", "Internal Affairs",
+  "Environmental Protection", "Defense", "Energy", "Interior",
   "Transportation", "Health", "Agriculture", "Finance"
 )
 gov_filtered_quotes <- subset(filtered_quotes, affiliation == "Government" & role %in% government_ministries)
@@ -53,7 +59,7 @@ stance_counts <- gov_filtered_quotes %>%
 
 # Add missing combinations of ministries and positions with counts set to 0
 complete_stance_counts <- stance_counts %>%
-  complete(role = government_ministries, position = c("Support", "Neutral", "Weak oppose", "Strong oppose"), fill = list(count = 0))
+  complete(role = government_ministries, position = c("Support", "Neutral", "Weakly opposed", "Strongly opposed"), fill = list(count = 0))
 
 # Calculate the percentage of each stance within each ministry
 stance_percentages <- complete_stance_counts %>%
@@ -64,34 +70,49 @@ stance_percentages <- complete_stance_counts %>%
 print("Stance percentages verification:")
 print(stance_percentages)
 
-# Define the correct stacking order: Support on top, Strong Oppose at the bottom
-stance_levels <- c("Support", "Neutral", "Weak oppose", "Strong oppose")  # Reverse the order
+# Define the correct stacking order: Support on top, Strongly opposed at the bottom
+stance_levels <- c("Strongly opposed", "Weakly opposed", "Neutral", "Support")  # Ensure correct order
 
 # Ensure the factor levels are reversed for the correct stacking
 stance_percentages$position <- factor(stance_percentages$position, levels = stance_levels)
 
-# Map colors for the specified stance levels
+# Map colors for the specified stance levels with adjusted green
 stance_colors <- c(
-  "Strong oppose" = "#FF0000",  # Dark red
-  "Weak oppose" = "#FF9999",   # Light red
-  "Neutral" = "#D3D3D3",       # Grey
-  "Support" = "#66FF66"        # Green
+  "Strongly opposed" = "#8B0000",  # Dark red
+  "Weakly opposed" = "#CD5C5C",    # Lighter red
+  "Neutral" = "#D3D3D3",           # Grey
+  "Support" = "#228B22"            # Less bright green
 )
 
-# Create the stacked percentage bar chart with the legend on the right
+# Create the stacked percentage bar chart with updated label for "Environmental Protection"
 p_stacked <- ggplot(stance_percentages, aes(x = role, y = percentage, fill = position)) +
-  geom_bar(stat = "identity", position = "fill") +
+  geom_bar(stat = "identity", position = "stack") +  # Use "stack" instead of "fill"
   scale_fill_manual(values = stance_colors) +
-  labs(x = "Government Ministry", y = "Percentage", fill = "Stance", title = "5a. Share of stances regarding small projects by ministry") +
-  theme_minimal() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Convert Y-axis to 0%, 25%, etc.
+  scale_x_discrete(labels = function(x) ifelse(x == "Environmental Protection", "Env. Protection", x)) +
+  labs(
+    x = "Government Ministry",
+    y = "Percentage",
+    fill = "Stance",
+    title = "5a. Share of stances regarding small projects"
+  ) +
+  theme_minimal(base_family = "Times New Roman") +  # Set font to Times New Roman
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 8), # Rotate text and adjust size
-    plot.title = element_text(hjust = 0.5),  # Center the title
-    legend.position = "right"  # Move legend to the right
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10, family = "Times New Roman"),  
+    axis.text.y = element_text(size = 10, family = "Times New Roman"),  
+    plot.title = element_text(hjust = 0.5, size = 16, family = "Times New Roman"),  
+    legend.text = element_text(size = 10, family = "Times New Roman"),
+    legend.title = element_text(size = 12, family = "Times New Roman"),
+    strip.text.x = element_text(size = 12, family = "Times New Roman")  
   )
 
 # Explicitly print the plot
 print(p_stacked)
+
+
+# Save the plot with font embedding
+ggsave("plot_government_ministries_small_projects.pdf", plot = p_stacked, device = cairo_pdf, width = 10, height = 6)
+extrafont::embed_fonts("plot_government_ministries_small_projects.pdf")
 
 # Disconnect from the database
 dbDisconnect(con)

@@ -7,7 +7,12 @@ if (!require(DBI)) install.packages("DBI")
 library(DBI)
 if (!require(RSQLite)) install.packages("RSQLite")
 library(RSQLite)
+if (!require(extrafont)) install.packages("extrafont")
+library(extrafont)
 
+# Load fonts for Windows
+loadfonts(device = "win")
+# extrafont::font_import()
 # Set the working directory
 setwd("C:/Users/ariel/MyPythonScripts/wind")
 print("Working directory set")
@@ -32,7 +37,7 @@ small_projects <- subset(projects, installed_capacity < 20)
 filtered_quotes <- subset(all_quotes, project_code %in% small_projects$plan_number)
 print("Data filtered")
 
-# Shorten "Environmental organizations" to "Env. orgs"
+# Shorten "Environmental organizations" to "Env. Orgs"
 filtered_quotes$affiliation <- as.character(filtered_quotes$affiliation)
 filtered_quotes$affiliation[filtered_quotes$affiliation == "Environmental organizations"] <- "Env. Orgs"
 filtered_quotes$affiliation <- as.factor(filtered_quotes$affiliation)
@@ -56,30 +61,38 @@ stance_percentages <- stance_counts %>%
 print("Stance percentages verification:")
 print(stance_percentages)
 
-# Define the correct stacking order: Support on top, Strong Oppose at the bottom
-stance_levels <- c("Support", "Neutral", "Weak oppose", "Strong oppose")  # Reverse the order
+# Define the correct stacking order: Support on top, Strongly opposed at the bottom
+stance_levels <- c("Strongly opposed", "Weakly opposed", "Neutral", "Support")  # Ensure correct order
 
 # Ensure the factor levels are reversed for the correct stacking
 stance_percentages$position <- factor(stance_percentages$position, levels = stance_levels)
 
-# Map colors for the specified stance levels
+# Map colors for the specified stance levels with adjusted green
 stance_colors <- c(
-  "Strong oppose" = "#FF0000",  # Dark red
-  "Weak oppose" = "#FF9999",   # Light red
-  "Neutral" = "#D3D3D3",       # Grey
-  "Support" = "#66FF66"        # Green
+  "Strongly opposed" = "#8B0000",  # Dark red
+  "Weakly opposed" = "#CD5C5C",    # Lighter red
+  "Neutral" = "#D3D3D3",           # Grey
+  "Support" = "#228B22"            # Less bright green
 )
 
-# Create the stacked percentage bar chart with the legend on the right
+# Create the stacked percentage bar chart with increased font size for government ministries
 p_stacked <- ggplot(stance_percentages, aes(x = affiliation, y = percentage, fill = position)) +
-  geom_bar(stat = "identity", position = "fill") +
+  geom_bar(stat = "identity", position = "stack") +  # Use "stack" instead of "fill"
   scale_fill_manual(values = stance_colors) +
-  labs(x = "Affiliation", y = "Percentage", fill = "Stance", title = "4a. Share of stances regarding small projects") +
-  theme_minimal() +
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Convert Y-axis to 0%, 25%, etc.
+  labs(
+    x = "Affiliation",
+    y = "Percentage",
+    fill = "Stance",
+    title = "4a. Share of stances regarding small projects"
+  ) +
+  theme_minimal(base_family = "Times New Roman") +  # Set font to Times New Roman
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 8), # Rotate text and adjust size
-    plot.title = element_text(hjust = 0.5),  # Center the title
-    legend.position = "right"  # Move legend to the right
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Rotate text and adjust size
+    axis.text.y = element_text(size = 10),  # Increase Y-axis text size
+    plot.title = element_text(hjust = 0.5, size = 16),  # Center and size the title
+    legend.position = "right",  # Move legend to the right
+    strip.text.x = element_text(size = 12)  # Increase facet title size if facets are used
   )
 
 # Explicitly print the plot
