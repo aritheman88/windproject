@@ -75,18 +75,25 @@ stance_colors <- c(
   "Support" = "#228B22"            # Less bright green
 )
 
+total_counts <- stance_counts %>%
+  group_by(affiliation) %>%
+  summarise(total = sum(count))
+
+
 # Create the stacked percentage bar chart with increased font size for government ministries
 p_stacked <- ggplot(stance_percentages, aes(x = affiliation, y = percentage, fill = position)) +
-  geom_bar(stat = "identity", position = "stack") +  # Use "stack" instead of "fill"
+  geom_bar(stat = "identity", position = "stack") +
   scale_fill_manual(values = stance_colors) +
-  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Convert Y-axis to 0%, 25%, etc.
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   labs(
     x = "Affiliation",
     y = "Percentage",
     fill = "Stance",
     title = "4b. Share of stances regarding large projects"
   ) +
-  theme_minimal(base_family = "Times New Roman") +  # Set font to Times New Roman
+  geom_text(data = total_counts, aes(x = affiliation, y = 105, label = paste("N =", total)), 
+            inherit.aes = FALSE, size = 3.5, family = "Times New Roman") +
+  theme_minimal(base_family = "Times New Roman") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 10, family = "Times New Roman"),  
     axis.text.y = element_text(size = 10, family = "Times New Roman"),  

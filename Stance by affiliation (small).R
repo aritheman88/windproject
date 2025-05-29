@@ -67,6 +67,12 @@ stance_levels <- c("Strongly opposed", "Weakly opposed", "Neutral", "Support")  
 # Ensure the factor levels are reversed for the correct stacking
 stance_percentages$position <- factor(stance_percentages$position, levels = stance_levels)
 
+# Calculate total observations per affiliation
+total_counts <- stance_counts %>%
+  group_by(affiliation) %>%
+  summarise(total = sum(count), .groups = 'drop')
+
+
 # Map colors for the specified stance levels with adjusted green
 stance_colors <- c(
   "Strongly opposed" = "#8B0000",  # Dark red
@@ -77,23 +83,26 @@ stance_colors <- c(
 
 # Create the stacked percentage bar chart with increased font size for government ministries
 p_stacked <- ggplot(stance_percentages, aes(x = affiliation, y = percentage, fill = position)) +
-  geom_bar(stat = "identity", position = "stack") +  # Use "stack" instead of "fill"
+  geom_bar(stat = "identity", position = "stack") +
   scale_fill_manual(values = stance_colors) +
-  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Convert Y-axis to 0%, 25%, etc.
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   labs(
     x = "Affiliation",
     y = "Percentage",
     fill = "Stance",
     title = "4a. Share of stances regarding small projects"
   ) +
-  theme_minimal(base_family = "Times New Roman") +  # Set font to Times New Roman
+  geom_text(data = total_counts, aes(x = affiliation, y = 105, label = paste("N =", total)),
+            inherit.aes = FALSE, size = 3.5, family = "Times New Roman") +
+  theme_minimal(base_family = "Times New Roman") +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),  # Rotate text and adjust size
-    axis.text.y = element_text(size = 10),  # Increase Y-axis text size
-    plot.title = element_text(hjust = 0.5, size = 16),  # Center and size the title
-    legend.position = "right",  # Move legend to the right
-    strip.text.x = element_text(size = 12)  # Increase facet title size if facets are used
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5, size = 16),
+    legend.position = "right",
+    strip.text.x = element_text(size = 12)
   )
+
 
 # Explicitly print the plot
 print(p_stacked)

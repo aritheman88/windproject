@@ -76,6 +76,12 @@ stance_levels <- c("Strongly opposed", "Weakly opposed", "Neutral", "Support")  
 # Ensure the factor levels are reversed for the correct stacking
 stance_percentages$position <- factor(stance_percentages$position, levels = stance_levels)
 
+# Calculate total observations per ministry
+total_counts <- complete_stance_counts %>%
+  group_by(role) %>%
+  summarise(total = sum(count), .groups = 'drop')
+
+
 # Map colors for the specified stance levels with adjusted green
 stance_colors <- c(
   "Strongly opposed" = "#8B0000",  # Dark red
@@ -86,9 +92,11 @@ stance_colors <- c(
 
 # Create the stacked percentage bar chart with updated label for "Environmental Protection"
 p_stacked <- ggplot(stance_percentages, aes(x = role, y = percentage, fill = position)) +
-  geom_bar(stat = "identity", position = "stack") +  # Use "stack" instead of "fill"
+  geom_bar(stat = "identity", position = "stack") +
+  geom_text(data = total_counts, aes(x = role, y = 105, label = paste("N =", total)),
+            inherit.aes = FALSE, size = 3.5, family = "Times New Roman") +
   scale_fill_manual(values = stance_colors) +
-  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Convert Y-axis to 0%, 25%, etc.
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   scale_x_discrete(labels = function(x) ifelse(x == "Environmental Protection", "Env. Protection", x)) +
   labs(
     x = "Government Ministry",
@@ -96,7 +104,7 @@ p_stacked <- ggplot(stance_percentages, aes(x = role, y = percentage, fill = pos
     fill = "Stance",
     title = "5a. Share of stances regarding small projects"
   ) +
-  theme_minimal(base_family = "Times New Roman") +  # Set font to Times New Roman
+  theme_minimal(base_family = "Times New Roman") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 10, family = "Times New Roman"),  
     axis.text.y = element_text(size = 10, family = "Times New Roman"),  
@@ -105,6 +113,7 @@ p_stacked <- ggplot(stance_percentages, aes(x = role, y = percentage, fill = pos
     legend.title = element_text(size = 12, family = "Times New Roman"),
     strip.text.x = element_text(size = 12, family = "Times New Roman")  
   )
+
 
 # Explicitly print the plot
 print(p_stacked)
