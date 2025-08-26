@@ -4,11 +4,10 @@
 1. The source of the data are PDF files that are available in the Israeli planning authority website, e.g. https://mavat.iplan.gov.il/SV4/1/2000885907/310 
 2. PDFs were manually processed, creating the "statement" of each speaker in each session. 
 3. The original PDFs include duplicate statements, as each session is recorded in relation to each project. So if a session referred to 3 projects, this would have the same statements three times. 
-4. We saved the statements in the complete form in the table all_quotes, and with removed duplicates in all_quotes_1.
-5. We ran our analysis on both versions, and chose to conduct our analysis on the table with the duplicates. This is because if we remove duplicates, statements that refer to both small and large projects would be registered to one project. By assigning the statement to all the projects involved, we gave each project its correct weight. 
-6. We saved our database as a DB file (wind_project.db) and managed the db through DB browser. Analysis was conducted using R Studio and Stata. 
+4. We saved the statements in the complete form in the attached CSV file. 
+5. We ran our analysis on both versions (with and without duplicates), and chose to conduct our analysis on the table with the duplicates. This is because if we remove duplicates, statements that refer to both small and large projects would be registered to one project. By assigning the statement to all the projects involved, we gave each project its correct weight. 
 
 ## GPT analysis
 7. GPT analysis was conducted using the GPT API. This allows for running 100s of queries automatically. 
 8. We wrote a list of criteria to predict the stance of the statement. The criteria can be found in the stance_prompt.docx file. 
-9. The stance predictions and an explanatory paragraph were saved in the wind_project.db. We tried two approaches, both results are saved in the DB. 
+9. The stance predictions and an explanatory paragraph were saved in the CSV file. 
